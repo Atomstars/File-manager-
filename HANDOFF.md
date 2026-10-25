@@ -38,7 +38,7 @@ No Python third-party packages are needed to run it. No AI or cloud service.
 | `Launch_Findspace.vbs` | Windowless source launcher or EXE launcher if present |
 | `Create_Desktop_Shortcut.vbs` | Creates a shortcut pointing at the extracted project |
 | `Build_Portable_Exe.bat` | Windows-only build using PyInstaller 6.22.3 |
-| `.github/workflows/windows-build.yml` | Manual Windows build workflow; not run yet |
+| `.github/workflows/windows-build.yml` | Manual Windows build workflow; verified to upload the portable artifact |
 | `app.py`, `web/` | Optional older localhost browser interface |
 | `tests/test_engine.py` | File operations, recovery and local API checks |
 | `tests/test_desktop.py` | Desktop helpers and controller tests using a canvas test double |
@@ -56,43 +56,50 @@ macOS/Linux state: `~/.local/share/Findspace`.
 
 ## Verification already completed
 
-- 30 Python tests passed on Linux.
+- 31 Python tests passed on Windows with Python 3.12 and 3.14.
 - `node tests/ui_smoke.cjs` passed against the live local Python server.
-- Python syntax compilation passed.
-- ZIP archives were checked for integrity.
+- A local Windows `Findspace.exe` build completed with PyInstaller 6.22.3.
+- GitHub Actions Windows run `40195760762` passed and uploaded the
+  `Findspace-Windows` artifact.
+- The downloaded artifact initialized isolated state, remained responsive for the
+  smoke interval, kept one primary instance and handled a second launch through
+  `activate.request`.
+- `Launch_Findspace.vbs` started the source app through `pythonw.exe` without a
+  terminal and initialized isolated state.
 
 The native controller tests use a mocked canvas. They are **not visual tests**.
-A graphical display and Windows runner were unavailable.
+The borderless transparent orb does not expose a normal Windows main-window handle,
+so automated visual interaction was not completed.
 
 ## Unfinished / limits
 
-1. No built or tested Windows `.exe` exists. Build on Windows and verify the result.
-2. Native rendering, transparent corners, VBS launchers, Windows shortcut creation,
-   Explorer reveal, file-system behavior and desktop placement need Windows tests.
-3. Storage totals cover indexed files in one selected folder. Whole-drive capacity
+1. Native rendering, transparent corners, Windows shortcut creation, Explorer
+   reveal and desktop placement still need human Windows acceptance testing.
+2. Storage totals cover indexed files in one selected folder. Whole-drive capacity
    and free space are not implemented.
-4. Search matches names/paths, not document contents or semantic descriptions.
-5. Organization rules are basic category + optional modified-month grouping.
+3. Search matches names/paths, not document contents or semantic descriptions.
+4. Organization rules are basic category + optional modified-month grouping.
    Custom user rules and storage-aware destination choices are not implemented.
-6. Moves use hard links on the same filesystem. Unsupported/cross-device locations
+5. Moves use hard links on the same filesystem. Unsupported/cross-device locations
    are skipped. No automatic cleanup or deletion, background watcher or autostart.
-7. No Java source exists. Java was discussed as an alternative; do not say a port
+6. No Java source exists. Java was discussed as an alternative; do not say a port
    has been completed or that the user's laptop has been inspected.
 
 ## Environment distinction
 
-Checks in this conversation found Python 3.12.14 and a Java 17 runtime in the
-remote Linux development workspace. `javac` was missing. These results say nothing
-about the user's Windows laptop; no software was installed on that laptop.
+Checks in this continuation used a Windows 11 development environment with Python
+3.14.5, an isolated Python 3.12 runtime and Node.js 24.16.0. These results do not
+establish behavior on the user's intended Windows laptop.
 
 ## Recommended continuation
 
 The project repository is https://github.com/Atomstars/File-manager- on branch
 `main`. Use this repository as the source of truth for continuation. Read the user's latest instruction on
 Python vs Java before a rewrite. Preserve the tested file-handling behavior.
-If retaining Python, build/test the existing Windows desktop release before
-expanding scope. If moving to Java, port and test the engine and native UI;
-the Python implementation remains the behavioral reference.
+The Python Windows artifact now builds and passes startup/single-instance smoke
+checks. Perform human visual acceptance on the intended Windows computer before
+publishing a durable release. If moving to Java, port and test the engine and native
+UI; the Python implementation remains the behavioral reference.
 
 ## Handoff prompt
 

@@ -53,9 +53,11 @@ Put that one file on the desktop. End users of the built EXE do not need Python,
 an open terminal, a web browser or a server. It remains a running local app until
 you choose Quit.
 
-The build is unsigned and must be tested on Windows before distribution. An
-optional manual GitHub Actions workflow is included for a Windows build runner;
-it has not been run. Packaging reference:
+The build is unsigned. The manual GitHub Actions workflow has completed
+successfully on a Windows runner and publishes a `Findspace-Windows` artifact.
+The packaged app has passed startup and single-instance smoke checks on Windows;
+complete visual acceptance should still be performed on the intended computer
+before broad distribution. Packaging reference:
 <https://pyinstaller.org/en/stable/>.
 
 On macOS/Linux, run `python3 desktop.py` with Tk and a graphical desktop available.
@@ -127,19 +129,23 @@ and geometry helpers. `instance.py` prevents duplicate desktop instances.
 `Findspace.pyw` is the windowed entry point. `app.py` and `web/` retain the optional
 browser interface. Change extension categories in `engine.py` under `TYPES`.
 
-This is a source release, not a signed Windows installer. Windows native rendering,
-shortcut/launcher scripts, transparency and Explorer integration must be checked on
-a Windows machine. Development verification ran headlessly on Linux. There is no
-AI agent, semantic search, billing, telemetry, background autostart or automatic
-file deletion. Run one interface at a time against the same local index.
+This is a source release with an unsigned portable Windows artifact, not a signed
+installer. Windows packaging, source launching and single-instance startup have
+been checked; native rendering, shortcut creation, transparency and Explorer
+integration still need human acceptance on the intended Windows computer. There
+is no AI agent, semantic search, billing, telemetry, background autostart or
+automatic file deletion. Run one interface at a time against the same local index.
 
-Validation: 30 Python tests cover file handling, recovery, API protection, folder
+Validation: 31 Python tests cover file handling, recovery, API protection, folder
 pagination, ring geometry, preferences, instance locking and native controller
 transitions using a canvas test double. The
 Node smoke harness exercises overview, search, filtering, storage, duplicates,
 preview, confirmation, moving and undo against the live Python server using a
-minimal DOM. Native and browser rendering were not visually verified in the build
-environment; neither a graphical display nor a Windows runner was available.
+minimal DOM. The suite passes on Windows with Python 3.12 and 3.14. Both a local
+portable build and the GitHub Actions artifact were launched on Windows; they
+initialized state, remained responsive and routed a second launch to the existing
+instance. The frameless native canvas still needs human visual acceptance because
+the automated window inventory cannot target its intentionally borderless overlay.
 
 ## Product direction
 
@@ -152,4 +158,5 @@ adding AI, subscriptions or wider computer-management features.
 Repository: <https://github.com/Atomstars/File-manager->, branch `main`.
 Read `AGENTS.md` and `HANDOFF.md` first for requirements, verified behavior and
 remaining Windows packaging/testing work. The current implementation is Python;
-no Java migration or Windows executable has been completed.
+the Windows artifact is also the packaged Python application. No Java migration
+has been completed.
