@@ -152,19 +152,40 @@ class EngineTests(unittest.TestCase):
         self.assertEqual(self.manager.summary()['count'], 0)
 
     def test_pending_move_recovery(self):
-        source = self.put('notes.txt', b'recover')
+        self.put('notes.txt', b'recover')
         self.scan()
-        dest = self.root / 'Findspace Organized/Documents/notes.txt'
-        dest.parent.mkdir(parents=True)
-        sha = digest(source)
+        plan = self.manager.plan()
+        item = self.manager.plans[plan['id']]['items'][0]
+        source, dest = Path(item['source']), Path(item['destination'])
+        sha, move_id = self.manager.safe_move(source, dest, item['fp'])
         with self.manager.connect() as c:
-            c.execute('INSERT INTO moves VALUES (?,?,?,?,?,?,?)', ('id','batch',str(source),str(dest),sha,'pending',1))
+            c.execute('INSERT INTO moves VALUES (?,?,?,?,?,?,?)',
+                      (move_id, 'batch', str(source), str(dest), sha, 'pending', 1))
         os.link(source,dest)
         source.unlink()
         self.manager.recover_pending()
+        with self.manager.connect() as c:
+            self.assertEqual(c.execute('SELECT status FROM moves WHERE id=?', (move_id,)).fetchone()['status'], 'moved')
         self.assertEqual(self.manager.summary()['history'][0]['count'], 1)
         self.manager.undo('batch')
         self.assertEqual(source.read_bytes(),b'recover')
+
+    def test_pending_move_recovery_preserves_both_paths(self):
+        self.put('notes.txt', b'recover')
+        self.scan()
+        plan = self.manager.plan()
+        item = self.manager.plans[plan['id']]['items'][0]
+        source, dest = Path(item['source']), Path(item['destination'])
+        sha, move_id = self.manager.safe_move(source, dest, item['fp'])
+        with self.manager.connect() as c:
+            c.execute('INSERT INTO moves VALUES (?,?,?,?,?,?,?)',
+                      (move_id, 'batch', str(source), str(dest), sha, 'pending', 1))
+        os.link(source, dest)
+        self.manager.recover_pending()
+        with self.manager.connect() as c:
+            self.assertEqual(c.execute('SELECT status FROM moves WHERE id=?', (move_id,)).fetchone()['status'], 'pending')
+        self.assertEqual(source.read_bytes(), b'recover')
+        self.assertEqual(dest.read_bytes(), b'recover')
 
     def test_history_is_scoped_to_current_folder(self):
         self.put('notes.txt')
