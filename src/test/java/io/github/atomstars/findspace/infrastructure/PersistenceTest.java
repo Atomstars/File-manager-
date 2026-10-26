@@ -17,8 +17,9 @@ class PersistenceTest {
 
   @Test
   void importsPythonJournalWithBackupAndCanUndo() throws Exception {
-    Path root = Files.createDirectory(temporary.resolve("Downloads")),
-        state = Files.createDirectory(temporary.resolve("state"));
+    // Match the canonical paths produced by the original organizer and Java scan.
+    Path root = Files.createDirectory(temporary.resolve("Downloads")).toRealPath(),
+        state = Files.createDirectory(temporary.resolve("state")).toRealPath();
     Path source = root.resolve("notes.txt"),
         destination = root.resolve("Findspace Organized/Documents/notes.txt");
     Files.createDirectories(destination.getParent());

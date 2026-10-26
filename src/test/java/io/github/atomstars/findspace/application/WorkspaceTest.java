@@ -38,8 +38,10 @@ class WorkspaceTest {
 
   @BeforeEach
   void setup() throws IOException {
-    root = Files.createDirectory(temporary.resolve("Downloads"));
-    state = Files.createDirectory(temporary.resolve("state"));
+    // Windows runners can supply an 8.3 temp alias. Production scan/journal paths
+    // use the canonical root, so recovery fixtures must use that representation too.
+    root = Files.createDirectory(temporary.resolve("Downloads")).toRealPath();
+    state = Files.createDirectory(temporary.resolve("state")).toRealPath();
     files = new NioFileAccess(state);
     store = new SqliteWorkspaceStore(state);
     workspace = new Workspace(files, store, Clock.systemUTC());
