@@ -21,7 +21,7 @@ jobs:
           cache: maven
       - name: Verify Java architecture and behavior
         shell: bash
-        run: bash mvnw --batch-mode verify
+        run: bash ./mvnw --batch-mode verify
       - name: Package Windows app with bundled runtime
         if: runner.os == 'Windows'
         shell: pwsh
