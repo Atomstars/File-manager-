@@ -7,3 +7,9 @@ __pycache__/
 dist/
 build/
 *.spec
+target/
+*.log
+.idea/
+*.iml
+.vscode/
+.test-state*/

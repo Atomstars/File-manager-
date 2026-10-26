@@ -1,34 +1,34 @@
-# Findspace project instructions
+# Findspace development instructions
 
-Read `HANDOFF.md` and `README.md` before changing the application.
+Read README.md, HANDOFF.md and docs/ARCHITECTURE.md before changes.
 
-## User's product requirements
+Findspace is a local Java desktop application. Preserve real folder navigation,
+search, storage, preview/select/confirm organization, duplicates and persistent undo.
 
-- Make a computer file manager that helps a person who struggles to organize and locate files.
-- Desktop-first: a clickable central icon reveals real subfolders around it.
-- Folder navigation, quick file retrieval, storage visibility, organization previews and undo.
-- Keep launch and setup simple. Avoid requiring an AI service, API key, browser or open terminal in desktop mode.
-- User asked about using Java. Current implementation remains Python; no Java migration is implemented.
+## Architecture
 
-## Preserve existing behavior
+- domain: immutable records and classification.
+- application: named use cases and ports; no Swing, JDBC or OS APIs.
+- infrastructure: filesystem, SQLite and desktop adapters.
+- ui: focused views; slow work runs through the background task runner.
+- bootstrap: dependency wiring.
 
-- `Findspace.pyw` → `desktop.py` is the native desktop entry point.
-- `engine.py` owns indexing, preview generation, verified moves, undo and exact duplicates.
-- Keep index and operation history in the user's state directory, not inside the source tree.
-- Never automatically delete duplicates or overwrite existing destination files.
-- Preview/select/confirm before moving. Reject stale previews and changed sources.
-- Skip symbolic links/junctions and system/dependency directories. Stay within the selected folder.
-- Undo must skip edited files and occupied original locations.
-- Do not replace real implementation with mock scores, fake file listings or decorative controls.
+Keep code with its owner. Avoid a monolithic engine/controller. Use the pinned
+Maven wrapper and Java formatter.
+
+## File safety
+
+Keep indexes/history in the user's state directory. Never overwrite destinations
+or automatically delete duplicates. Reject expired previews and changed files.
+Skip links/junctions/reparse points and stay inside the selected folder.
+Journal before mutation. Preserve ambiguous paths. Undo skips edited files and
+occupied originals. Back up existing databases before migration and preserve
+Python move-history compatibility.
 
 ## Verification
 
-```sh
-python -m unittest discover -s tests -v
-node tests/ui_smoke.cjs
-```
-
-Node is needed only for the optional browser UI smoke test, not to run the desktop app.
-Native GUI checks require an actual graphical desktop. Windows packaging requires Windows.
-Do not claim a Windows executable or visual verification exists until actually produced/tested.
-No subagents or parallel agent work are required by this file.
+Run mvnw.cmd verify (Windows) or ./mvnw verify. Format with mvnw.cmd spotless:apply.
+Build the Windows package with scripts/package-windows.ps1. Test with temporary
+--state and --root directories. Do not claim visual verification or packaging
+unless performed. No subagents are required. Never commit target/, databases,
+runtimes or credentials.

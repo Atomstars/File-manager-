@@ -2,161 +2,132 @@
 
 **Find your files. Understand your space. Give everything a home.**
 
-A local computer file manager with a native desktop folder ring and a simple
-preview → select → apply → undo engine. Desktop mode needs no browser, localhost
-server, AI framework, API key or account. The earlier browser interface is retained
-as a separate optional launcher.
+A local Java desktop workspace with search, storage summaries, a floating folder
+navigator, organization previews, exact duplicates and persistent undo.
+No account, cloud service, browser or API key is needed.
 
-## Desktop version — start on Windows
+## Run
 
-1. Install **Python 3.10 or later** from <https://www.python.org/downloads/> if needed.
-2. Extract the ZIP into a folder. Do not run from inside the ZIP.
-3. Double-click **Launch_Findspace.vbs**, or **Findspace.pyw** if `.pyw` files are
-   associated with your installed Python. The native folder ring opens, without a
-   terminal window.
-4. Optionally run **Create_Desktop_Shortcut.vbs** once to put an icon on your desktop.
-   Keep the extracted app folder at its current location; the shortcut points to it.
-5. Choose a personal folder. Subfolders appear around the central icon. Open a file
-   tool and scan that folder when prompted.
+Development requires JDK 21 or later. Maven 3.9.12 is pinned by the wrapper;
+the first run downloads Maven and declared dependencies.
 
-The VBS files are convenience launchers for source mode. Systems where Windows
-Script Host/VBScript is disabled can launch `Findspace.pyw` directly, or build and
-launch the EXE. They do not change system policy or install a background service.
-
-| Desktop action | Result |
-| --- | --- |
-| Click the central `f·` orb | Expand or collapse the folder ring. |
-| Drag the orb | Move the widget; its position is remembered. |
-| Click a folder | Explore its child folders in the ring. |
-| Double-click a folder | Open it in Explorer / the system file manager. |
-| Right-click a folder | Open, explore, or run a file tool on that folder. |
-| Parent / Choose folder | Navigate up or select another starting folder. |
-| Arrows below the ring | Page through folders when there are more than eight. |
-| Find files / Space / Organize / Copies | Open the native toolbox, including previews and undo. |
-| Launch the desktop shortcut again | Expand the existing widget instead of starting a second instance. |
-| Right-click the orb | Toggle keep-above-other-windows, open the folder, or quit. |
-
-This is a **floating desktop widget**, not a Windows Explorer shell extension. It
-does not replace the Desktop, modify shell settings, or start automatically with
-Windows. File operations run only after a scan and an explicit action. Browsing
-the folder ring itself does not scan file contents.
-
-## Single-file Windows EXE — no Python needed to run
-
-The source ZIP **does not contain a built Windows executable**. A native Windows
-build cannot be produced by PyInstaller on this Linux build machine.
-
-On Windows, with Python installed and internet available for the build, run
-**Build_Portable_Exe.bat** once. It creates an isolated build environment, installs
-the pinned packaging tool, runs the tests, and produces **dist/Findspace.exe**.
-Put that one file on the desktop. End users of the built EXE do not need Python,
-an open terminal, a web browser or a server. It remains a running local app until
-you choose Quit.
-
-The build is unsigned. The manual GitHub Actions workflow has completed
-successfully on a Windows runner and publishes a `Findspace-Windows` artifact.
-The packaged app has passed startup and single-instance smoke checks on Windows;
-complete visual acceptance should still be performed on the intended computer
-before broad distribution. Packaging reference:
-<https://pyinstaller.org/en/stable/>.
-
-On macOS/Linux, run `python3 desktop.py` with Tk and a graphical desktop available.
-Windows uses transparent canvas corners; other platforms use an opaque background.
-For the optional browser interface, run `python app.py` or `Start_Findspace.bat`.
-The desktop source mode requires Tk, included with standard Windows Python.
-No installation through pip is needed to run the source app itself.
-
-## What works
-
-| Tool | Behavior |
-| --- | --- |
-| Find a file | Search indexed names and paths, combine terms such as `invoice pdf`, filter by type, sort by date/name/size, reveal in the system file manager. |
-| Space explorer | Category totals, first-level folder totals and the largest files. Totals cover indexed files, not total drive occupancy or physical allocated disk space. |
-| Organize | Preview each source/destination; deselect files; move into `Findspace Organized/<type>/`; optionally group by last-modified year/month. |
-| Undo | Persistent move journal; restore unchanged files without replacing anything at their old location. |
-| Duplicate check | Group nonempty matching-size files by SHA-256 content hash. Hard-linked aliases aren't counted as extra physical copies. No deletion. |
-
-### The organization rules
-
-Default scope is **loose files at the top of the selected folder**. Existing project
-folders remain intact. Including subfolders is an explicit option and can break
-links in projects, applications, playlists or documents. Code and unrecognized file
-types are left in place. Existing organized files are skipped. Collisions are given
-numbered destination names at preview time; if a destination becomes occupied later,
-the operation skips that file instead of overwriting it.
-
-Organizing files **does not free storage**. Space explorer and duplicate review help
-you decide what to remove separately using your usual file manager.
-
-## File handling
-
-- All data stays on this computer. Desktop mode starts no HTTP server. The optional
-  browser launcher binds only to `127.0.0.1` on a free
-  port, with a per-launch API token, host/origin checks and no CORS permissions.
-- File metadata and move history are saved in `%LOCALAPPDATA%\Findspace` on Windows
-  or `~/.local/share/Findspace` on macOS/Linux. Remove that folder to clear the index
-  and history (this does not remove your files; undo history will be lost).
-- Scans are recursive but skip hidden files/folders, common system directories,
-  dependencies, virtual environments, symlinks, junctions and unfinished downloads.
-  Unreadable files are counted as skipped. File contents are read only for hashing
-  duplicate candidates and verifying moves; search does not index document text.
-- Choose personal folders, not Windows, application directories or a whole drive.
-- Moves use exclusive hard-link creation followed by unlinking the original. They
-  require a filesystem supporting hard links, e.g. NTFS/APFS/ext4. FAT/exFAT,
-  cross-device, cloud-placeholder and some network locations may fail and are skipped.
-- Content and metadata checks catch changed files. Do not edit or externally move
-  files while applying or undoing a plan. This is not an adversarial filesystem sandbox.
-- A journal entry is persisted before moving. After an interrupted move, restart can
-  recover a completed move into history. If both locations exist after interruption,
-  both are preserved for manual review. Undo is best-effort, not an all-or-nothing
-  batch transaction. Empty folders are intentionally retained.
-- Refresh the index after outside changes. The app currently indexes one folder at a
-  time; it has no background watcher. Large scans keep metadata in memory before commit.
-- Duplicate hashes identify matching contents, not redundant purpose: a backup or
-  project copy may be intentional. Duplicate findings can become stale after edits.
-
-## Development and checks
-
-```sh
-python -m unittest discover -s tests -v
-node tests/ui_smoke.cjs   # optional: Node 18+; live API + UI controller harness
-python app.py --no-browser --port 8765 --root /absolute/path/to/test-folder
+```powershell
+.\mvnw.cmd verify
+java --enable-native-access=ALL-UNNAMED -jar target/findspace.jar
 ```
 
-`engine.py` owns indexing, rules, previews and move history. `desktop.py` is the
-native orb, folder ring and toolbox. `desktop_model.py` contains folder pagination
-and geometry helpers. `instance.py` prevents duplicate desktop instances.
-`Findspace.pyw` is the windowed entry point. `app.py` and `web/` retain the optional
-browser interface. Change extension categories in `engine.py` under `TYPES`.
+On Linux/macOS use `./mvnw verify`. Import `pom.xml` into your Java IDE.
+A graphical desktop is required. For isolated testing, pass
+`--state C:\Temp\findspace-state --root C:\Temp\sample-files`.
 
-This is a source release with an unsigned portable Windows artifact, not a signed
-installer. Windows packaging, source launching and single-instance startup have
-been checked; native rendering, shortcut creation, transparency and Explorer
-integration still need human acceptance on the intended Windows computer. There
-is no AI agent, semantic search, billing, telemetry, background autostart or
-automatic file deletion. Run one interface at a time against the same local index.
+Findspace starts with only an **A** badge. Hover A to expand your ring; hover a folder
+to reveal a small ring centered on that folder. The other desktop icons temporarily
+hide to keep the rings clear; click A to return. Double-click
+an item to open it. Drag the center to reposition. Right-click for all actions.
+Move away to collapse back to A. Scroll over the ring (or use the right-click
+Next/Previous page commands) to browse additional items.
 
-Validation: 31 Python tests cover file handling, recovery, API protection, folder
-pagination, ring geometry, preferences, instance locking and native controller
-transitions using a canvas test double. The
-Node smoke harness exercises overview, search, filtering, storage, duplicates,
-preview, confirmation, moving and undo against the live Python server using a
-minimal DOM. The suite passes on Windows with Python 3.12 and 3.14. Both a local
-portable build and the GitHub Actions artifact were launched on Windows; they
-initialized state, remained responsive and routed a second launch to the existing
-instance. The frameless native canvas still needs human visual acceptance because
-the automated window inventory cannot target its intentionally borderless overlay.
+Use **Settings → My items** to add and reorder files, folders or app shortcuts.
+Desktop files and shortcuts, including the public Windows desktop, appear alongside
+pins by default. They remain at their original paths; nothing is moved or copied.
+Each expansion refreshes the list. Settings can disable desktop inclusion. Appearance
+settings control size, hover delay, theme, always-on-top and automatic collapse.
+Both rings page eight items. Recycle Bin and other virtual Windows shell icons are
+not filesystem items and are not included. Hidden/unavailable items are excluded.
 
-## Product direction
+**Manage files** opens the workspace: choose a folder, preview destinations,
+select files, then confirm. Its button appears directly below A when expanded.
+The launcher uses instant folder/type badges to avoid waiting for Windows shell
+icon resolution. Optional **Collect loose code** gathers standalone
+code files into `Findspace Organized/Code`; code inside project folders stays in place.
+Search, storage, duplicates and persistent undo are available from the sidebar.
+**Apps** discovers Windows Start Menu shortcuts for opening and pinning, with
+access to Windows app settings. Installed application directories are never moved.
+Closing the workspace returns to the orb; right-click the orb to quit.
 
-The initial promise is simple: **“I can't remember where I saved it, and Downloads is
-a mess.”** Prove fast retrieval and trusted organization with a few real users before
-adding AI, subscriptions or wider computer-management features.
+## Windows distribution
 
-## Continue with Codex
+```powershell
+.\scripts\package-windows.ps1
+.\scripts\install-desktop.ps1
+```
 
-Repository: <https://github.com/Atomstars/File-manager->, branch `main`.
-Read `AGENTS.md` and `HANDOFF.md` first for requirements, verified behavior and
-remaining Windows packaging/testing work. The current implementation is Python;
-the Windows artifact is also the packaged Python application. No Java migration
-has been completed.
+This verifies the project and creates `target/desktop/Findspace/Findspace.exe`
+with its Java runtime. Distribute the **entire Findspace folder**, not the EXE
+alone. End users need neither Java nor Python installed. The desktop installation
+script copies the package to a new version folder under `%LOCALAPPDATA%\Programs\Findspace`
+and creates **Findspace.lnk** on the desktop. Previous installations and preferences
+are retained; an existing shortcut is backed up before replacement.
+The package is unsigned; signing/installer work is
+separate. Existing outputs are preserved; use `-Destination` for another build.
+
+## Structure
+
+```text
+src/main/java/io/github/atomstars/findspace/
+  bootstrap/                  Startup and dependency wiring
+  domain/                     Immutable records and classification
+  application/                Search, planning, moves, recovery, duplicates
+    port/                     Filesystem and persistence interfaces
+  infrastructure/
+    filesystem/               NIO and Windows file identity
+    persistence/              SQLite and legacy history compatibility
+    desktop/                  Preferences, instance locking, OS integration
+  ui/                         Focused views and background task coordination
+src/test/java/                Integration and architecture checks
+docs/                        System design and learning walkthrough
+scripts/                     Development and Windows packaging
+.github/workflows/           CI verification and Windows artifact
+```
+
+Start with [the code walkthrough](docs/CODE_WALKTHROUGH.md) and
+[system design](docs/ARCHITECTURE.md).
+
+## File safety
+
+- Preview, select and confirm before moves. Previews expire after an hour and
+  are invalidated by scans. Changed files and occupied destinations are skipped.
+- Loose files only by default. Including subfolders can break project references
+  and requires explicit selection. Code stays in place unless loose-code collection
+  is selected; code inside subfolders and unknown types remain in place.
+- Moves exclusively create a hard link, verify identity/content, then unlink the
+  source. Unsupported/cross-device operations are skipped; no copy/delete fallback.
+- Journal intent before mutation. Undo survives restart and skips edited files
+  and occupied originals. Interrupted moves and undo can be recovered.
+- Ambiguous recovery preserves both paths for manual review. Duplicate checks
+  never delete files. Hard-linked aliases are not counted as duplicate copies.
+- Links, junctions, reparse points, hidden/system/dependency entries and unfinished
+  downloads are excluded. Unreadable entries count as skipped.
+
+Avoid external edits/moves while organizing. This is a personal file tool, not
+an adversarial filesystem sandbox.
+
+## State and migration
+
+State lives in `%LOCALAPPDATA%\Findspace` on Windows and
+`~/.local/share/Findspace` elsewhere. An existing Python move journal is backed up
+before the first additive Java schema update and remains usable for undo.
+Java uses separate index tables and requires a fresh scan. Python preferences
+remain untouched; Java uses `desktop.properties`.
+See [migration notes](docs/MIGRATION.md).
+
+The superseded Python/browser implementation, tests and launchers are removed
+from the active tree but recoverable from Git commit `a234b45`.
+
+## Development
+
+```powershell
+.\mvnw.cmd verify
+.\mvnw.cmd spotless:apply
+```
+
+Verification compiles, tests real files and SQLite, packages, and checks Java
+formatting. Symlink tests explicitly skip when OS privileges prevent creation.
+Do not commit generated `target/`, database files, runtimes or credentials.
+
+Scope: one selected folder, explicit refresh, name/path search and category/month
+organization. Metadata remains in memory and SQLite; the table displays up to
+5,000 matches. Storage totals represent indexed file lengths, not physical
+allocation/whole-drive capacity. No watcher, automatic cleanup, autostart or
+semantic search. The orb uses transparency where the desktop supports it, with
+an opaque fallback. It is a floating application, not a Windows shell replacement.
